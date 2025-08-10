@@ -1,4 +1,5 @@
-import mongoose from "mongoose";
+//import mongoose from "mongoose";
+const mongoose = require('mongoose')
 
 const BootcampSchema = new mongoose.Schema({
     name: {
@@ -30,11 +31,11 @@ const BootcampSchema = new mongoose.Schema({
         type: {
         type: String,
         enum: ['Point'],
-        required: true
+        //required: true
       },
       coordinates: {
         type: [Number],
-        required: true,
+        //required: true,
         index: '2dsphere'
       },
       formattedAddress: String,
@@ -89,4 +90,6 @@ const BootcampSchema = new mongoose.Schema({
     }
 })
 
+//const Bootcamp = mongoose.model('Bootcamp', BootcampSchema)
+//export default Bootcamp
 module.exports = mongoose.model('Bootcamp', BootcampSchema)
