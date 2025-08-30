@@ -1,14 +1,24 @@
 //import Bootcamp from '../models/Bootcamp.js'
+const geocoder = require('../utils/geocoder.js')
 const Bootcamp = require('../models/Bootcamp.js')
 const asyncHandler = require('../middleware/async.js')
 const ErrorResponse = require('../utils/errorResponse.js')
+
 
 // @desc Get all bootcamps
 //  @route GET /api/v1/bootcamps
 // @access Public
 exports.getBootcamps = asyncHandler(async(req, res, next) => {
     
-       const bootcamps = await Bootcamp.find()
+    let query
+
+    let queryStr = JSON.stringify(req.query)
+
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`)
+
+    query = Bootcamp.find(JSON.parse(queryStr))
+    
+    const bootcamps = await query
        
        res
        .status(200)
@@ -79,4 +89,32 @@ exports.deleteBootcamp = asyncHandler(async(req, res, next) => {
 
     res.status(200).json({success : true, data: {} })  
     
+})
+
+// @desc Get bootcamps within a radius
+//  @route GET /api/v1/bootcamps/radius/:zipcode/:distance
+// @access Private
+exports.getBootcampsInRadius = asyncHandler(async(req, res, next) => {
+
+    const {zipcode, distance } = req.params
+    
+    //Get la/lng from geocoder
+    const loc = await geocoder.geocode(zipcode)
+    const lat = loc[0].latitude
+    const lng = loc[0].longitude
+
+    // Calculate radius using radians 
+    // Divide distance by radius of Earth 
+    // Radius of the Earth is 3,963 mi / 6,378 km
+    const radius = distance / 3963
+
+    const bootcamps = await Bootcamp.find({
+        location: { $geoWithin: { $centerSphere: [ [lng, lat ], radius ] } }
+    })
+
+    res.status(200).json({
+        success: true,
+        count: bootcamps.length,
+        data: bootcamps
+    })
 })
