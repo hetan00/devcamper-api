@@ -1,15 +1,22 @@
 const express = require('express')
 //import express from 'express'
-const {getBootcamps, getBootcamp, createBootcamp, updateBootcamp, deleteBootcamp, getBootcampsInRadius} = require('../controllers/bootcamps')
-// import {
-//   getBootcamps,
-//   getBootcamp,
-//   createBootcamp,
-//   updateBootcamp,
-//   deleteBootcamp
-// } from '../controllers/bootcamps.js'
+const {
+    getBootcamps, 
+    getBootcamp, 
+    createBootcamp, 
+    updateBootcamp, 
+    deleteBootcamp, 
+    getBootcampsInRadius
+} = require('../controllers/bootcamps')
+
+// Include other resource routers
+
+const courseRouter = require('./courses')
 
 const router = express.Router()
+
+// Reroute into other resource routers
+router.use('/:bootcampId/courses', courseRouter)
 
 router.route('/radius/:zipcode/:distance').get(getBootcampsInRadius)
 
