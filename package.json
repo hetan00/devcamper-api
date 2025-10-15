@@ -11,10 +11,12 @@
   "author": "Hetan Kamalkumar",
   "license": "MIT",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "colors": "^1.4.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-fileupload": "^1.5.2",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.5",
     "morgan": "^1.10.1",
     "node-geocoder": "^4.4.1",
