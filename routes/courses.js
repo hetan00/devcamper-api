@@ -1,5 +1,6 @@
 const express = require('express')
 
+const { protect } = require('../middleware/auth')
 
 const {
     getCourses, getCourse, addCourse, updateCourse, deleteCourse
@@ -12,10 +13,10 @@ const router = express.Router({ mergeParams: true })
 router.route('/').get(advancedResults(Course, {
     path: 'bootcamp',
     select: 'name description'
-}), getCourses).post(addCourse)
+}), getCourses).post(protect, addCourse)
 
-router.route('/').get(getCourses).post(addCourse)
-router.route('/:id').get(getCourse).put(updateCourse).delete(deleteCourse)
+//router.route('/').get(getCourses).post(addCourse)
+router.route('/:id').get(getCourse).put(protect, updateCourse).delete(protect, deleteCourse)
 
 
 module.exports = router
