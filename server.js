@@ -3,8 +3,8 @@ const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
-const fileupload = require('express-fileupload')
-const cookieParser = require('cookie-parser')
+const fileupload = require('express-fileupload');
+const cookieParser = require('cookie-parser');
 const colors = require('colors');
 const errorHandler = require('./middleware/error');
 
@@ -17,45 +17,82 @@ connectDB();
 // Route files
 const bootcamps = require('./routes/bootcamps');
 const courses = require('./routes/courses');
-const auth = require('./routes/auth')
+const auth = require('./routes/auth');
 
 const app = express();
 
-// Body parser
+/* ---------------------------------
+   🧱 Core Middleware Order (fixed)
+----------------------------------- */
+
+// Parse JSON first (for API requests)
 app.use(express.json());
 
-// Cookie parser
-app.use(cookieParser())
+// Parse URL-encoded data (for form submissions, optional but safe)
+app.use(express.urlencoded({ extended: true }));
 
-// Dev logging middleware
+// Handle cookies
+app.use(cookieParser());
+
+// Handle file uploads (after body parsers)
+app.use(fileupload());
+
+/* ---------------------------------
+   🔍 Logging & Debugging
+----------------------------------- */
+
+// Dev request logging
 if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev'));
+  app.use(morgan('dev'));
 }
 
-// File uploading
-app.use(fileupload())
+// Optional: log every request to help debugging
+app.use((req, res, next) => {
+  console.log(`[REQ] ${req.method} ${req.url}`);
+  next();
+});
 
-// Set static folder 
-app.use(express.static(path.join(__dirname, 'public')))
+/* ---------------------------------
+   📁 Static Folder
+----------------------------------- */
 
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Mount routers
+/* ---------------------------------
+   🚦 Mount Routers
+----------------------------------- */
+
 app.use('/api/v1/bootcamps', bootcamps);
 app.use('/api/v1/courses', courses);
-app.use('/api/v1/auth', auth)
+app.use('/api/v1/auth', auth);
+
+/* ---------------------------------
+   ⚠️ Error Handler (must be last)
+----------------------------------- */
 
 app.use(errorHandler);
+
+/* ---------------------------------
+   🚀 Server Setup
+----------------------------------- */
 
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(
-    PORT,
-    () => console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold)
+  PORT,
+  () =>
+    console.log(
+      `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow
+        .bold
+    )
 );
 
-// Handle unhandled promise rejections
+/* ---------------------------------
+   ❌ Handle Unhandled Rejections
+----------------------------------- */
+
 process.on('unhandledRejection', (err, promise) => {
-    console.log(`Error: ${err.message}`.red);
-    // Close server & exit process
-    server.close(() => process.exit(1));
+  console.log(`Error: ${err.message}`.red);
+  // Close server & exit process
+  server.close(() => process.exit(1));
 });
