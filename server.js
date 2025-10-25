@@ -11,6 +11,11 @@ const errorHandler = require('./middleware/error');
 // Load env vars
 dotenv.config({ path: './config/config.env' });
 
+console.log('SMTP_HOST', process.env.SMTP_HOST);
+console.log('SMTP_EMAIL present?', !!process.env.SMTP_EMAIL);
+console.log('SMTP_PASSWORD present?', !!process.env.SMTP_PASSWORD);
+
+
 // Connect to database
 connectDB();
 
@@ -18,6 +23,8 @@ connectDB();
 const bootcamps = require('./routes/bootcamps');
 const courses = require('./routes/courses');
 const auth = require('./routes/auth');
+const users = require('./routes/users')
+const reviews = require('./routes/reviews')
 
 const app = express();
 
@@ -65,6 +72,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/v1/bootcamps', bootcamps);
 app.use('/api/v1/courses', courses);
 app.use('/api/v1/auth', auth);
+app.use('/api/v1/users', users)
+app.use('/api/v1/reviews', reviews)
 
 /* ---------------------------------
    ⚠️ Error Handler (must be last)
