@@ -13,7 +13,6 @@ const ReviewSchema = new mongoose.Schema({
     },
     rating: {
         type: Number, 
-        required: [true, 'Please add number of weeks'],
         min: 1,
         max: 10,
         required: [true, 'Please add a rating between 1 and 10']
@@ -36,6 +35,80 @@ const ReviewSchema = new mongoose.Schema({
 
 // Prevent user from submitting more than one review per bootcamp
 ReviewSchema.index({ bootcamp: 1, user: 1}, { unique: true })
+
+
+// Static method to get avg rating and save
+// ReviewSchema.statics.getAverageRating = async function(bootcampId) {
+
+//     const obj = await this.aggregate([
+//         {
+//             $match: { bootcamp: bootcampId }
+//         },
+//         {
+//             $group: {
+//                 _id: '$bootcamp',
+//                 averageRating: { $avg: '$rating'}
+//             }
+//         }
+//     ])
+
+//     try {
+//         await this.model('Bootcamp').findByIdAndUpdate(bootcampId, {
+//             averageRating: obj[0].averageRating
+//         })
+//     } catch (err) {
+//         console.log(err);
+//     }
+// }
+
+// Static method to get avg rating and save to Bootcamp.averageRating
+ReviewSchema.statics.getAverageRating = async function (bootcampId) {
+  const result = await this.aggregate([
+    { $match: { bootcamp: bootcampId } },
+    { $group: { _id: '$bootcamp', averageRating: { $avg: '$rating' } } }
+  ]);
+
+  // If no reviews remain, set undefined (or 0, your call)
+  const avg = result.length ? Math.round(result[0].averageRating * 10) / 10 : undefined;
+
+  try {
+    await this.model('Bootcamp').findByIdAndUpdate(bootcampId, {
+      averageRating: avg
+    });
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// Call getAverageCost after save
+ReviewSchema.post('save', function() {
+    this.constructor.getAverageRating(this.bootcamp)
+})
+
+// Recalculate after an update via findOneAndUpdate / findByIdAndUpdate
+ReviewSchema.post('findOneAndUpdate', async function (doc) {
+  if (doc) {
+    await doc.constructor.getAverageRating(doc.bootcamp);
+  }
+});
+
+// For document.deleteOne()
+ReviewSchema.post('deleteOne', { document: true, query: false }, function () {
+  this.constructor.getAverageRating(this.bootcamp);
+});
+
+// For findByIdAndDelete / findOneAndDelete (query deletes)
+ReviewSchema.post('findOneAndDelete', async function (doc) {
+  if (doc) {
+    await doc.constructor.getAverageRating(doc.bootcamp);
+  }
+});
+
+
+// Call getAverageCost before remove
+ReviewSchema.pre('remove', function() {
+    this.constructor.getAverageRating(this.bootcamp)
+})
 
 
 

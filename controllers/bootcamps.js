@@ -105,7 +105,7 @@ exports.deleteBootcamp = asyncHandler(async(req, res, next) => {
         (new ErrorResponse(`User ${req.params.id} is not authorized to delete this bootcamp`,401))
     }
 
-    bootcamp.remove()
+    await bootcamp.deleteOne()
 
     res.status(200).json({success : true, data: {} })  
     

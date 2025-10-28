@@ -5,6 +5,12 @@ const morgan = require('morgan');
 const connectDB = require('./config/db');
 const fileupload = require('express-fileupload');
 const cookieParser = require('cookie-parser');
+const mongoSanitize = require('express-mongo-sanitize')
+const helmet = require('helmet')
+const sanitizeInput = require('./middleware/sanitize')
+const rateLimit = require('express-rate-limit')
+const hpp = require('hpp')
+const cors = require('cors')
 const colors = require('colors');
 const errorHandler = require('./middleware/error');
 
@@ -43,6 +49,29 @@ app.use(cookieParser());
 
 // Handle file uploads (after body parsers)
 app.use(fileupload());
+
+// Sanitize data
+app.use(mongoSanitize())
+
+// Set security headers
+app.use(helmet())
+
+// Prevent XSS attacks
+app.use(sanitizeInput)
+
+// Rate limiting
+const limiter = rateLimit({
+   windowMs: 10 * 60 * 1000, //  10 mins
+   max: 100
+})
+
+app.use(limiter)
+
+// Prevent http param pollution
+app.use(hpp())
+
+// Enable CORS
+app.use(cors())
 
 /* ---------------------------------
    🔍 Logging & Debugging
