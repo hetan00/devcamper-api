@@ -1,0 +1,775 @@
+openapi: 3.0.0
+info:
+  title: DevCamper API Prod
+  version: 1.0.0
+  description: ''
+servers:
+  - url: http://localhost:5000/api/v1
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Enter your JWT token in the format **Bearer &lt;your_token&gt;**.
+        Example: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+
+paths:
+  '/bootcamps':
+    get:
+      summary: Get All Bootcamps
+      description: 'Fetch all bootcamps from database. Includes pagination, filtering, etc. '
+      operationId: getBaseurlApiV1BootcampsGetAllBootcamps
+      tags:
+        - Bootcamps
+      responses:
+        '200':
+          description: Successful
+        '400':
+          description: Bad Request
+        '500':
+          description: Server Error
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+    post:
+      summary: Create New Bootcamp
+      description: >
+        Add new bootcamp to database. Must be authenticated and must be
+        publisher or admin. Only 1 bootcamp allowed per publisher.
+      tags: [Bootcamps]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "ModernTech Bootcamp<script>alert(1)</script>"
+                description:
+                  type: string
+                  example: "ModernTech has one goal, and that is to make you a rockstar developer and/or designer with a six figure salary. We teach both development and UI/UX."
+                website:
+                  type: string
+                  example: "https://moderntech.com"
+                phone:
+                  type: string
+                  example: "(222) 222-2222"
+                email:
+                  type: string
+                  example: "enroll@moderntech.com"
+                address:
+                  type: string
+                  example: "220 Pawtucket St, Lowell, MA 01854"
+                careers:
+                  type: array
+                  items: { type: string }
+                  example: ["Web Development", "UI/UX", "Mobile Development"]
+                housing:
+                  type: boolean
+                  example: false
+                jobAssistance:
+                  type: boolean
+                  example: true
+                jobGuarantee:
+                  type: boolean
+                  example: false
+                acceptGi:
+                  type: boolean
+                  example: true
+            example:
+              name: "ModernTech Bootcamp<script>alert(1)</script>"
+              description: "ModernTech has one goal, and that is to make you a rockstar developer and/or designer with a six figure salary. We teach both development and UI/UX."
+              website: "https://moderntech.com"
+              phone: "(222) 222-2222"
+              email: "enroll@moderntech.com"
+              address: "220 Pawtucket St, Lowell, MA 01854"
+              careers: ["Web Development", "UI/UX", "Mobile Development"]
+              housing: false
+              jobAssistance: true
+              jobGuarantee: false
+              acceptGi: true
+      responses:
+        '200': { description: Bootcamp created successfully }
+        '400': { description: Bad Request }
+        '500': { description: Server Error }
+    put:
+      summary: Update Single Bootcamp
+      description: Update an existing bootcamp in the database. Requires authentication.
+      tags: [Bootcamps]
+      security:
+        - bearerAuth: []          # 🔒 JWT required
+      parameters:
+        - in: path
+          name: bootcampId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                housing:
+                  type: boolean
+            example:
+              housing: false
+      responses:
+        '200':
+          description: Successful
+        '400':
+          description: Bad Request
+        '500':
+          description: Server Error
+  '/bootcamps/{bootcampId}':
+     delete:
+      summary: Delete Bootcamp
+      description: Delete a bootcamp from the database. Requires authentication and proper ownership or admin role.
+      operationId: deleteBaseurlApiV1Bootcamps690020ea739957f30dc33af1DeleteBootcamp
+      tags:
+        - Bootcamps
+      security:
+        - bearerAuth: []     # ✅ Correct indentation for security
+      parameters:
+        - in: path
+          name: bootcampId
+          required: true
+          description: ID of the bootcamp to delete
+          schema:
+            type: string
+            example: 690020ea739957f30dc33af1
+      responses:
+        '200':
+          description: Bootcamp deleted successfully
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized (Missing or invalid token)
+        '403':
+          description: Forbidden (Not the owner or admin)
+        '500':
+          description: Server Error
+  '/bootcamps/radius/{zipcode}/{distance}':
+    get:
+      summary: Get Bootcamps By Distance
+      description: >
+        Get all bootcamps within a given distance (in miles) of a specific ZIP code.  
+        Uses geocoding to calculate the area radius.
+      tags:
+        - Bootcamps
+      parameters:
+        - in: path
+          name: zipcode
+          required: true
+          description: ZIP code to search around
+          schema:
+            type: string
+            example: "02118"
+        - in: path
+          name: distance
+          required: true
+          description: Distance from ZIP code in miles
+          schema:
+            type: number
+            example: 30
+      responses:
+        '200':
+          description: Bootcamps retrieved successfully
+        '400':
+          description: Bad Request
+        '500':
+          description: Server Error
+  '/bootcamps/{bootcampId}/courses':
+    parameters:
+      - in: path
+        name: bootcampId
+        required: true
+        description: ID of the bootcamp
+        schema: { type: string }
+
+    get:
+      summary: Get Courses For Bootcamp
+      description: Get all courses for a specific bootcamp
+      tags: [Courses]
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '500': { description: Server Error }
+    post:
+      summary: Create Bootcamp Course
+      description: >
+        Create a new course for a specific bootcamp.  
+        Must be authenticated as a **publisher** or **admin**.
+      tags:
+        - Courses
+      security:
+        - bearerAuth: []      # 🔒 Requires JWT token
+      parameters:
+        - in: path
+          name: bootcampId
+          required: true
+          description: ID of the bootcamp to which the course will be added
+          schema:
+            type: string
+            example: 5d725a1b7b292f5f8ceff788
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Full Stack Web Development 3"
+                description:
+                  type: string
+                  example: "In this course you will learn full stack web development, first learning all about the frontend with HTML/CSS/JS/Vue and then the backend with Node.js/Express/MongoDB"
+                weeks:
+                  type: integer
+                  example: 12
+                tuition:
+                  type: number
+                  example: 12000
+                minimumSkill:
+                  type: string
+                  enum: [beginner, intermediate, advanced]
+                  example: intermediate
+                scholarshipsAvailable:
+                  type: boolean
+                  example: true
+            example:
+              title: "Full Stack Web Development 3"
+              description: "In this course you will learn full stack web development, first learning all about the frontend with HTML/CSS/JS/Vue and then the backend with Node.js/Express/MongoDB"
+              weeks: 12
+              tuition: 12000
+              minimumSkill: "intermediate"
+              scholarshipsAvailable: true
+      responses:
+        '201':
+          description: Course created successfully
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized (Missing or invalid token)
+        '403':
+          description: Forbidden (Not allowed to add course)
+        '500':
+          description: Server Error
+  '/bootcamps/{bootcampId}/photo':
+    put:
+      summary: Upload Bootcamp Photo
+      description: >
+        Upload a photo for a specific bootcamp.  
+        Must be authenticated as the **bootcamp owner** or an **admin**.  
+        Accepts image files only (JPG, PNG). File size limit: 1 MB.
+      tags:
+        - Bootcamps
+      security:
+        - bearerAuth: []        # 🔒 Requires JWT
+      parameters:
+        - in: path
+          name: bootcampId
+          required: true
+          description: ID of the bootcamp to upload a photo for
+          schema:
+            type: string
+            example: 5d725a1b7b292f5f8ceff788
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:   # ✅ Correct content type for file uploads
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file (JPG or PNG)
+              required:
+                - file
+      responses:
+        '200':
+          description: Photo uploaded successfully
+        '400':
+          description: Invalid file or bad request
+        '401':
+          description: Unauthorized (Missing or invalid token)
+        '403':
+          description: Forbidden (User not bootcamp owner or admin)
+        '404':
+          description: Bootcamp not found
+        '500':
+          description: Server error
+  '/api/v1/courses':
+    get:
+      summary: Get All Courses
+      description: Get all courses in database
+      tags: [Courses]
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '500': { description: Server Error }
+  '/api/v1/courses/courseId':
+    parameters:
+      - in: path
+        name: courseId
+        required: true
+        description: ID of the course
+        schema: { type: string }
+        example: 5d725c84c4ded7bcb480eaa0
+
+    get:
+      summary: Get A Single Course
+      description: Get a single course by its ID
+      tags: [Courses]
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '404': { description: Not Found }
+        '500': { description: Server Error }
+    put:
+      summary: Update Course
+      description: Update a course (auth required)
+      tags: [Courses]
+      security:
+        - bearerAuth: []   # 🔒 JWT required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tuition: { type: number, example: 13000 }
+              minimumSkill:
+                type: string
+                enum: [beginner, intermediate, advanced]
+                example: advanced
+          example:
+            tuition: 13000
+            minimumSkill: "advanced"
+      responses:
+        '200': { description: Course updated successfully }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '404': { description: Not Found }
+        '500': { description: Server Error }
+    delete:
+      summary: Delete Course
+      description: Delete a course (auth required)
+      tags: [Courses]
+      security:
+        - bearerAuth: []   # 🔒 JWT required
+      responses:
+        '200': { description: Course deleted successfully }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '404': { description: Not Found }
+        '500': { description: Server Error }
+  #Authentication ROUTES
+  '/api/v1/auth/register':
+    post:
+      summary: Register User
+      description: Add user to database with encrypted password
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:      { type: string, example: "John Doe" }
+                email:     { type: string, example: "brad@gmail.com" }
+                password:  { type: string, example: "123456" }
+                role:
+                  type: string
+                  enum: [user, publisher, admin]
+                  example: user
+            example:
+              name: "John Doe"
+              email: "brad@gmail.com"
+              password: "123456"
+              role: "user"
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '500': { description: Server Error }
+  '/api/v1/auth/me':
+     get:
+      summary: Get Logged In User via Token
+      description: Returns the current user (requires JWT)
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '500': { description: Server Error }
+  '/api/v1/auth/login':
+    post:
+      summary: Login User
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:    { type: string, example: "publisher@gmail.com" }
+                password: { type: string, example: "123456" }
+            example:
+              email: "publisher@gmail.com"
+              password: "123456"
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '500': { description: Server Error }
+  '/api/v1/auth/forgotpassword':
+     post:
+      summary: Forgot Password
+      description: Generate reset token and send email
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, example: "john@gmail.com" }
+            example:
+              email: "john@gmail.com"
+      responses:
+        '200': { description: Email queued/sent }
+        '400': { description: Bad Request }
+        '500': { description: Server Error }
+  '/api/v1/auth/resetpassword/3877993858ae893b543915a2a15aff7ce863c2ba':
+    put:
+      summary: Reset Password
+      description: Reset user password using the emailed token
+      tags: [Authentication]
+      parameters:
+        - in: path
+          name: resetToken
+          required: true
+          description: Password reset token from email
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, example: "12345678" }
+            example:
+              password: "12345678"
+      responses:
+        '200': { description: Password reset successful }
+        '400': { description: Bad Request or invalid token }
+        '500': { description: Server Error }
+  '/api/v1/auth/updatedetails':
+    put:
+      summary: Update User Details
+      description: Update logged-in user's name and email
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string, example: "john@gmail.com" }
+                name:  { type: string, example: "John Smith" }
+            example:
+              email: "john@gmail.com"
+              name: "John Smith"
+      responses:
+        '200': { description: Updated successfully }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '500': { description: Server Error }
+  '/api/v1/auth/updatepassword':
+    put:
+      summary: Update Password
+      description: Update logged-in user's password
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string, example: "12345678" }
+                newPassword:     { type: string, example: "123456" }
+            example:
+              currentPassword: "12345678"
+              newPassword: "123456"
+      responses:
+        '200': { description: Password updated }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '500': { description: Server Error }
+  '/api/v1/auth/logout':
+    get:
+      summary: Log Out User
+      description: Clears token cookie
+      tags: [Authentication]
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '500': { description: Server Error }
+  #Users Route
+  '/api/v1/users':
+    get:
+      summary: Get All Users
+      description: Returns all users
+      tags: [Users]
+      security:
+        - bearerAuth: []   # 🔒 admin required
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '500': { description: Server Error }
+    post:
+      summary: Create User
+      description: Create a new user
+      tags: [Users]
+      security:
+        - bearerAuth: []   # 🔒 admin required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, role]
+              properties:
+                name:     { type: string, example: "Nate Johnson" }
+                email:    { type: string, example: "nate@example.com" }
+                password: { type: string, example: "P@ssw0rd!" }
+                role:
+                  type: string
+                  enum: [user, publisher, admin]
+                  example: user
+            example:
+              name: "Nate Johnson"
+              email: "nate@example.com"
+              password: "P@ssw0rd!"
+              role: "user"
+      responses:
+        '201': { description: User created }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '500': { description: Server Error }
+  '/api/v1/users/68fbfc675ec85f54c742c8e3':
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        description: ID of the user
+        schema: { type: string }
+        example: 68fbfc675ec85f54c742c8e3
+    get:
+      summary: Get Single User
+      description: Returns a user by ID
+      tags: [Users]
+      security:
+        - bearerAuth: []   # 🔒 admin required
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '404': { description: Not Found }
+        '500': { description: Server Error }
+    put:
+      summary: Update User
+      description: Update a user's details
+      tags: [Users]
+      security:
+        - bearerAuth: []   # 🔒 admin required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:  { type: string, example: "Nate Johnson" }
+                email: { type: string, example: "nate@example.com" }
+                role:
+                  type: string
+                  enum: [user, publisher, admin]
+                  example: user
+            example:
+              name: "Nate Johnson"
+      responses:
+        '200': { description: User updated }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '404': { description: Not Found }
+        '500': { description: Server Error }
+    delete:
+       summary: Delete User
+       description: Delete a user
+       tags: [Users]
+       security:
+        - bearerAuth: []   # 🔒 admin required
+       responses:
+        '200': { description: User deleted }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '404': { description: Not Found }
+        '500': { description: Server Error }
+
+  '/api/v1/reviews':
+    get:
+      summary: Get All Reviews
+      description: Get all reviews (optionally populated with bootcamp info)
+      tags: [Reviews]
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '500': { description: Server Error }
+  '/api/v1/bootcamps/{bootcampId}/reviews':
+    parameters:
+      - in: path
+        name: bootcampId
+        required: true
+        description: ID of the bootcamp
+        schema: { type: string }
+        example: 5d725a1b7b292f5f8ceff788
+    get:
+      summary: Get Reviews For Bootcamp
+      description: Fetch the reviews for a specific bootcamp
+      tags: [Reviews]
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '404': { description: Bootcamp not found }
+        '500': { description: Server Error }
+
+    post:
+      summary: Add Review
+      description: Add a review for a bootcamp (auth required)
+      tags: [Reviews]
+      security:
+        - bearerAuth: []   # 🔒 JWT required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, text, rating]
+              properties:
+                title:  { type: string, example: "Great Job" }
+                text:   { type: string, example: "I learned a lot" }
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  example: 6
+            example:
+              title: "Great Job"
+              text: "I learned a lot"
+              rating: 6
+      responses:
+        '201': { description: Review created }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '404': { description: Bootcamp not found }
+        '500': { description: Server Error }
+  '/api/v1/reviews/5d7a514b5d2c12c7449be022':
+    parameters:
+      - in: path
+        name: reviewId
+        required: true
+        description: ID of the review
+        schema: { type: string }
+        example: 5d7a514b5d2c12c7449be022
+    get:
+      summary: Get A Single Review
+      description: Fetch a review by id (populates bootcamp name & description)
+      tags: [Reviews]
+      responses:
+        '200': { description: Successful }
+        '400': { description: Bad Request }
+        '404': { description: Not Found }
+        '500': { description: Server Error }
+  
+    put:
+      summary: Update Review
+      description: Update an existing review (auth required; owner or admin)
+      tags: [Reviews]
+      security:
+        - bearerAuth: []   # 🔒 JWT required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string, example: "Had Fun" }
+                text:  { type: string, example: "Great teacher and clear examples." }
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  example: 8
+            example:
+              title: "Had Fun"
+      responses:
+        '200': { description: Review updated }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '404': { description: Not Found }
+        '500': { description: Server Error }
+    delete:
+      summary: Delete Review
+      description: Delete a review (auth required; owner or admin)
+      tags: [Reviews]
+      security:
+        - bearerAuth: []   # 🔒 JWT required
+      responses:
+        '200': { description: Review deleted }
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '404': { description: Not Found }
+        '500': { description: Server Error }

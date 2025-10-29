@@ -14,6 +14,11 @@ const cors = require('cors')
 const colors = require('colors');
 const errorHandler = require('./middleware/error');
 
+// ✅ Swagger dependencies
+const swaggerUi = require('swagger-ui-express');
+const fs = require('fs');
+const YAML = require('yaml');
+
 // Load env vars
 dotenv.config({ path: './config/config.env' });
 
@@ -87,6 +92,28 @@ app.use((req, res, next) => {
   console.log(`[REQ] ${req.method} ${req.url}`);
   next();
 });
+
+/* ---------------------------------
+   📘 Swagger API Documentation
+----------------------------------- */
+
+// Load OpenAPI spec
+const swaggerFile = path.join(__dirname, 'docs', 'DevCamper API Prod-openapi.yaml');
+if (fs.existsSync(swaggerFile)) {
+  const openapiText = fs.readFileSync(swaggerFile, 'utf8');
+  const openapiSpec = YAML.parse(openapiText);
+
+  // Mount Swagger UI at /api-docs
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
+    customSiteTitle: 'DevCamper API Docs',
+    customCss: '.swagger-ui .topbar { display: none }'
+  }));
+
+  console.log('✅ Swagger UI loaded at /api-docs');
+} else {
+  console.warn('⚠️  DevCamper API Prod-openapi.yaml not found in /docs folder');
+}
+
 
 /* ---------------------------------
    📁 Static Folder
