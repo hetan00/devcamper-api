@@ -132,6 +132,18 @@ app.use('/api/v1/users', users)
 app.use('/api/v1/reviews', reviews)
 
 /* ---------------------------------
+   🌍 Root Route (for base URL)
+----------------------------------- */
+app.get('/', (req, res) => {
+  res.json({
+    name: 'DevCamper API',
+    docs: '/api-docs',
+    version: '1.0.0',
+    status: 'OK'
+  });
+});
+
+/* ---------------------------------
    ⚠️ Error Handler (must be last)
 ----------------------------------- */
 
