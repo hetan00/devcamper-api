@@ -76,7 +76,7 @@ https://devcamper-api-w84z.onrender.com/api-docs
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/devcamper_api.git
+git clone https://github.com/hetan00/devcamper-api.git
 cd devcamper_api
 ```
 
